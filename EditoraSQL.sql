@@ -8,8 +8,8 @@
   endereco varchar(45) not null
  );
  
-alter table editora change column descricao nome varchar(45) not null;
-ALTER TABLE editora  ADD COLUMN cod_grupo INT, ADD CONSTRAINT fk_grupo FOREIGN KEY (cod_grupo)  REFERENCES grupo(id_grupo);
+alter table editora rename column descricao to nome;
+ALTER TABLE editora  ADD COLUMN cod_grupo INT, ADD CONSTRAINT fk_grupo FOREIGN KEY (cod_grupo)  REFERENCES grupo(id_grupo) on delete set null on update cascade;
 
  
 create table livro(
