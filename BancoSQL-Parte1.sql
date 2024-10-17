@@ -3,14 +3,14 @@ use Banco;
 
 
 create table banco(
-	codigo int primary key auto_increment,
+    codigo int primary key auto_increment,
     nome varchar(45)
 );
 
 
 
 create table agencia(
-	numero_agencia int auto_increment,
+    numero_agencia int auto_increment,
     cod_banco int unique not null,
     endereco varchar(100),
     primary key(numero_agencia,cod_banco),
@@ -20,7 +20,7 @@ create table agencia(
 
 
 create table conta(
-	num_conta varchar(7) primary key not null,
+    num_conta varchar(7) primary key not null,
     saldo float not null,
     tipo_conta int not null,
     num_agencia int not null,
@@ -29,7 +29,7 @@ create table conta(
 
 
 create table historico(
-	cpf varchar(14) not null,
+    cpf varchar(14) not null,
     num_conta varchar(7) not null,
     data_inicio date,
     primary key (cpf,num_conta),
@@ -38,7 +38,7 @@ create table historico(
 );
 
 create table cliente(
-	cpf varchar(14) primary key not null,
+    cpf varchar(14) primary key not null,
     nome varchar(45) not null,
     endereco varchar(100),
     sexo char(1)
@@ -47,7 +47,7 @@ alter table cliente add email varchar(60);
 select cpf, endereco from cliente where nome like 'c%';
 
 create table telefone_cliente(
-	cpf_cliente varchar(45) not null,
+    cpf_cliente varchar(45) not null,
     telefone varchar(20) not null,
     primary key(telefone,cpf_cliente),
     foreign key (cpf_cliente) references cliente(cpf)
