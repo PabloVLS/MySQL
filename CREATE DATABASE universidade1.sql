@@ -93,7 +93,7 @@ VALUES
 select nome,cpf,data_nascimento from aluno;
 
 /*2*/
-select nome,cpf,sexo from aluno where data_nascimento > 1990;
+select nome,cpf,sexo from aluno where data_nascimento > "1990-12-31";
 
 /*3*/
 select nome from curso order by carga_horaria desc limit 1;
@@ -110,10 +110,10 @@ ALTER TABLE matricula_disciplina DROP FOREIGN KEY matricula_disciplina_ibfk_2;
          delete from disciplina where carga_horaria < 20;
          
 /*5*/
-select id_aluno from matricula
-join matricula_disciplina ON matricula.id_matricula=matricula_disciplina.id_matricula
-join disciplina ON disciplina.id_disciplina=matricula_disciplina.id_disciplina
-where nome = 'Programação Orientada a Objetos' order by nota asc limit 1;
+select id_aluno from matricula as m
+join matricula_disciplina as md ON m.id_matricula=md.id_matricula
+join disciplina as d  ON d.id_disciplina=md.id_disciplina
+where d.nome = "Programação Orientada a Objetos" order by nota asc limit 1;
 
 /*6*/
 select id_aluno from matricula
@@ -121,9 +121,9 @@ join curso ON matricula.id_curso=curso.id_curso
 where carga_horaria > 2400;
 
 /*7*/
-select aluno.nome, curso.nome , carga_horaria from aluno
-join matricula ON aluno.id_aluno = matricula.id_aluno
-join curso ON matricula.id_curso=curso.id_curso;
+select a.nome, c.nome, c.carga_horaria from aluno a
+join matricula m ON a.id_aluno = m.id_aluno
+join curso c ON m.id_curso=c.id_curso;
 
 /*8*/
 update curso
