@@ -176,6 +176,7 @@ select nome_func from funcionario where id_superv is null;
 
 /*8*/
 select nome_func, nome_depto, nome_proj from funcionario as f 
+join trabalha as t on t.id_func = f.id_func
 join departamento as dp on f.id_depto=dp.id_depto
 join projeto as m on f.id_depto=m.id_depto
 order by nome_depto, nome_proj;
