@@ -228,5 +228,29 @@ where d.id_func is null and t.id_func is null;
 select empregado.nome_func as Nome_Empregado , supervisor.nome_func as supervisor from funcionario as empregado
 join funcionario supervisor on empregado.id_superv = supervisor.id_func;
 
-/*16. Liste o nome de cada projeto com o número de empregados que trabalham no projeto*/
-select nome_proj
+/*16*/
+
+select nome_proj,count(trabalha.id_func) from projeto
+left join trabalha on projeto.id_proj=trabalha.id_proj
+group by projeto.nome_proj;
+
+/*17*/
+
+select nome_proj,count(trabalha.id_func) from projeto
+join trabalha on projeto.id_proj=trabalha.id_proj
+group by projeto.nome_proj
+having count(trabalha.id_func)>2;
+
+/*18*/
+
+SELECT p.nome_proj, f.nome_func
+FROM projeto p
+JOIN trabalha t ON p.id_proj = t.id_proj
+JOIN funcionario f ON f.id_func = t.id_func
+WHERE f.salario > 800
+AND f.id_depto IN (
+    SELECT e.id_depto
+    FROM funcionario e
+    GROUP BY e.id_depto
+    HAVING COUNT(e.id_func) > 2
+);]
