@@ -198,3 +198,35 @@ select
 from funcionario as f
 join departamento as dp on f.id_depto=dp.id_depto
 where nome_depto='Pesquisa';
+
+
+/*11*/
+select nome_func from funcionario as f
+left join dependente as d on f.id_func = d.id_func
+where d.id_func is null;
+
+/*12*/
+
+select id_proj, d.id_depto, nome_func, endereco, data_nasc from projeto as p 
+join departamento as d on p.id_depto = d.id_depto
+join funcionario as f on f.id_func = d.id_gerente
+where localizacao = "Luxemburgo";
+
+/*13*/
+select nome_proj, localizacao from projeto as p
+left join trabalha as t on p.id_proj = t.id_proj
+left join funcionario as f on t.id_func = f.id_func
+where t.id_func is null;
+
+/*14*/
+select nome_func from trabalha as t
+right join funcionario as f on t.id_func = f.id_func
+left join dependente  as d on f.id_func = t.id_func
+where d.id_func is null and t.id_func is null;
+
+/*15*/
+select empregado.nome_func as Nome_Empregado , supervisor.nome_func as supervisor from funcionario as empregado
+join funcionario supervisor on empregado.id_superv = supervisor.id_func;
+
+/*16. Liste o nome de cada projeto com o número de empregados que trabalham no projeto*/
+select nome_proj
