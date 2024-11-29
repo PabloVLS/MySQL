@@ -115,7 +115,6 @@ CREATE TABLE log_registros (
     operation_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-/* Criação da trigger para log */
 DELIMITER //
 CREATE TRIGGER update_contas
 AFTER UPDATE ON conta
@@ -130,3 +129,23 @@ BEGIN
     );
 END//
 DELIMITER ;
+
+
+/*4- Crie uma view com o nome do cliente, nome do banco, endereço da agência, e número da
+conta.*/
+CREATE VIEW view_cliente_banco AS
+SELECT 
+    cliente.nome AS nome_cliente,
+    banco.nome AS nome_banco,
+    agencia.endereco AS endereco_agencia,
+    conta.num_conta AS numero_conta
+FROM 
+    cliente
+JOIN 
+    historico ON cliente.cpf = historico.cpf
+JOIN 
+    conta ON historico.num_conta = conta.num_conta
+JOIN 
+    agencia ON conta.num_agencia = agencia.numero_agencia
+JOIN 
+    banco ON agencia.cod_banco = banco.codigo;
