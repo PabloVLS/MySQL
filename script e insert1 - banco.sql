@@ -104,26 +104,29 @@ atualizados será gerado um registro nessa tabela, os dados antes e depois da at
 um campo timestamp para armazenar a operação.*/
 
 
-create table log_registros(
-        saldo_new float not null default 0,
-        tipo_conta_new int,
-        num_agencia_new int,
-        saldo_old float not null default 0,
-        tipo_conta_old int,
-        num_agencia_old int
-); 
-drop trigger update_conta;
+CREATE TABLE log_registros (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    saldo_new FLOAT NOT NULL DEFAULT 0,
+    tipo_conta_new INT,
+    num_agencia_new INT,
+    saldo_old FLOAT NOT NULL DEFAULT 0,
+    tipo_conta_old INT,
+    num_agencia_old INT,
+    operation_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+/* Criação da trigger para log */
 DELIMITER //
-create trigger update_contas
-after update on conta
-	for each row 
-    begin
-		insert into log_registro VALUES(
-        new.saldo,
-        new.tipo_conta,
-        new.num_agencia,
-        old.saldo,
-        old.tipo_conta,
-        old.num_agencia);
-    end//
+CREATE TRIGGER update_contas
+AFTER UPDATE ON conta
+FOR EACH ROW
+BEGIN
+    INSERT INTO log_registros (
+        saldo_new, tipo_conta_new, num_agencia_new,
+        saldo_old, tipo_conta_old, num_agencia_old
+    ) VALUES (
+        NEW.saldo, NEW.tipo_conta, NEW.num_agencia,
+        OLD.saldo, OLD.tipo_conta, OLD.num_agencia
+    );
+END//
 DELIMITER ;
