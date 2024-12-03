@@ -101,6 +101,13 @@ insert into telefone_cliente(cpf_cliente,telefone) values('666.777.888-99','(67)
 insert into telefone_cliente(cpf_cliente,telefone) values('666.777.888-99','(67)8121-8833');
 
 
+DELIMITER //
+create procedure taxaSalario(in taxa double)
+begin
+	set
+end//
+DELIMITER ;
+
 
 
 
