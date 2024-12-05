@@ -1,113 +1,197 @@
-create database Banco;
-use Banco;
+CREATE DATABASE IF NOT EXISTS bd_empresa;
+USE bd_empresa;
 
-
-create table banco(
-	codigo int primary key auto_increment,
-    nome varchar(45)
+CREATE TABLE departamento (
+    id_depto    Integer    NOT NULL auto_increment PRIMARY KEY,
+    nome_depto   VARCHAR(30)   NOT NULL,
+    id_gerente  Integer      NOT NULL,
+    CONSTRAINT uk_nome UNIQUE (nome_depto)
 );
 
-
-
-create table agencia(
-	numero_agencia int auto_increment,
-    cod_banco int unique not null,
-    endereco varchar(100),
-    primary key(numero_agencia,cod_banco),
-    foreign key (cod_banco) references banco(codigo)
-);
-select numero_agencia, endereco from agencia where cod_banco=1;
-insert into agencia(numero_agencia,endereco,cod_banco) values ('1333',' Rua João José da Silva, 486','1');
--- ta com erro
--- UPDATE conta SET num_agencia = 6342 WHERE num_conta= 562;
--- UPDATE agencia SET numero_agencia = 6342 WHERE numero_agencia = 562;
-
-
-create table conta(
-	num_conta varchar(7) primary key not null,
-    saldo float not null,
-    tipo_conta int not null,
-    num_agencia int not null,
-    foreign key (num_agencia) references agencia(numero_agencia)
-);
-delete from historico where num_conta = '86340-2';
-
-delete from conta  where num_conta = '86340-2';
-update conta set saldo = saldo * 1.10 where num_conta = '23584-7';
-
-create table historico(
-	cpf varchar(14) not null,
-    num_conta varchar(7) not null,
-    data_inicio date,
-    primary key (cpf,num_conta),
-    foreign key (cpf) references cliente(cpf),
-    foreign key (num_conta) references conta(num_conta)
+CREATE TABLE funcionario (
+    id_func     Integer     NOT NULL PRIMARY KEY auto_increment,
+    nome_func    VARCHAR(30)  NOT NULL,
+    endereco    VARCHAR(50)  NOT NULL,
+    data_nasc    DATE          NOT NULL,
+    sexo        CHAR(1)       NOT NULL,
+    salario     NUMERIC(8,2)   NOT NULL,
+    id_superv   Integer         NULL,
+    id_depto    Integer     NOT NULL,
+    CONSTRAINT ck_sexo CHECK (sexo='M' or sexo='F')
 );
 
-create table cliente(
-	cpf varchar(14) primary key not null,
-    nome varchar(45) not null,
-    endereco varchar(100),
-    sexo char(1)
-);
-select * from cliente where sexo='M';
-alter table cliente add email varchar(60);
-select cpf, endereco from cliente where nome like 'c%';
-update cliente set email = 'caetanolima@gmail.com.' where cpf = '666.777.888-99';
-
-create table telefone_cliente(
-	cpf_cliente varchar(45) not null,
-    telefone varchar(20) not null,
-    primary key(telefone,cpf_cliente),
-    foreign key (cpf_cliente) references cliente(cpf)
-
+CREATE TABLE projeto (
+    id_proj       Integer     NOT NULL PRIMARY KEY auto_increment,
+    nome_proj      VARCHAR(30)  NOT NULL,
+    localizacao   VARCHAR(30)      NULL,
+    id_depto      Integer     NOT NULL,
+    CONSTRAINT uk_nome_proj UNIQUE (nome_proj)
 );
 
+CREATE TABLE dependente (
+    id_dep       Integer     NOT NULL,
+    id_func      Integer     NOT NULL,
+    nome_dep      VARCHAR(30)  NOT NULL,
+    data_nasc     DATE          NOT NULL,
+    sexo         CHAR(1)       NOT NULL,
+    parentesco   CHAR(15)          NULL,
+    CONSTRAINT pk_depend PRIMARY KEY (id_dep, id_func),
+    CONSTRAINT ck_sexo_dep CHECK (sexo='M' or sexo='F')
+);
 
+CREATE TABLE trabalha (
+    id_func    Integer    NOT NULL,
+    id_proj    Integer     NOT NULL,
+    num_horas   NUMERIC(6,1)       NULL,
+    CONSTRAINT pk_trab PRIMARY KEY (id_func,id_proj)
+);
 
+INSERT INTO funcionario
+VALUES (1,'Joao Silva','R. Guaicui, 175', str_to_date('01/02/1955',"%d/%m/%Y"),'M',500,2,1);
+INSERT INTO funcionario
+VALUES (2,'Frank Santos','R. Gentios, 22',str_to_date('02/02/1966',"%d/%m/%Y"),'M',1000,8,1);
+INSERT INTO funcionario
+VALUES (3,'Alice Pereira','R. Curitiba, 11',str_to_date('15/05/1970',"%d/%m/%Y"),'F',700,4,3);
+INSERT INTO funcionario
+VALUES (4,'Junia Mendes','R. Espirito Santos, 123',str_to_date('06/07/1976',"%d/%m/%Y"),'F',1200,8,3);
+INSERT INTO funcionario
+VALUES (5,'Jose Tavares','R. Irai, 153',str_to_date('07/10/1975',"%d/%m/%Y"),'M',1500,2,1);
+INSERT INTO funcionario
+VALUES (6,'Luciana Santos','R. Irai, 175',str_to_date('07/10/1960',"%d/%m/%Y"),'F',600,2,1);
+INSERT INTO funcionario
+VALUES (7,'Maria Ramos','R. C. Linhares, 10',str_to_date('01/11/1965',"%d/%m/%Y"),'F',1000,4,3);
+INSERT INTO funcionario
+VALUES (8,'Jaime Mendes','R. Bahia, 111',str_to_date('25/11/1960',"%d/%m/%Y"),'M',2000,NULL,2);
 
+INSERT INTO departamento
+VALUES (1,'Pesquisa',2);
+INSERT INTO departamento
+VALUES (2,'Administracao',8);
+INSERT INTO departamento
+VALUES (3,'Construcao',4);
 
+INSERT INTO dependente
+VALUES (1,2,'Luciana',str_to_date('05/11/1990',"%d/%m/%Y"),'F','Filha');
+INSERT INTO dependente
+VALUES (2,2,'Paulo',str_to_date('11/11/1992',"%d/%m/%Y"),'M','Filho');
+INSERT INTO dependente
+VALUES (3,2,'Sandra',str_to_date('05/12/1996',"%d/%m/%Y"),'F','Filha');
+INSERT INTO dependente
+VALUES (4,4,'Mike',str_to_date('05/11/1997',"%d/%m/%Y"),'M','Filho');
+INSERT INTO dependente
+VALUES (5,1,'Max',str_to_date('11/05/1979',"%d/%m/%Y"),'M','Filho');
+INSERT INTO dependente
+VALUES (6,1,'Rita',str_to_date('07/11/1985',"%d/%m/%Y"),'F','Filha');
+INSERT INTO dependente
+VALUES (7,1,'Bety',str_to_date('15/12/1960',"%d/%m/%Y"),'F','Esposa');
 
-insert into banco(nome) values ('Banco do Brasil');
-insert into banco(codigo,nome) values (4,'CEF');
-insert into banco(nome) values ('Inter');
+INSERT INTO projeto
+VALUES (1,'ProdX','Savassi',1);
+INSERT INTO projeto
+VALUES (2,'ProdY','Luxemburgo',1);
+INSERT INTO projeto
+VALUES (3,'ProdZ','Centro',1);
+INSERT INTO projeto
+VALUES (10,'Computacao','C. Nova',3);
+INSERT INTO projeto
+VALUES (20,'Organizacao','Luxemburgo',2);
+INSERT INTO projeto
+VALUES (30,'N. Beneficios','C. Nova',1);
 
+INSERT INTO trabalha
+VALUES (1,1,32.5);
+INSERT INTO trabalha
+VALUES (1,2,7.5);
+INSERT INTO trabalha
+VALUES (5,3,40.0);
+INSERT INTO trabalha
+VALUES (6,1,20.0);
+INSERT INTO trabalha
+VALUES (6,2,20.0);
+INSERT INTO trabalha
+VALUES (2,2,10.0);
+INSERT INTO trabalha
+VALUES (2,3,10.0);
+INSERT INTO trabalha
+VALUES (2,10,10.0);
+INSERT INTO trabalha
+VALUES (2,20,10.0);
+INSERT INTO trabalha
+VALUES (3,30,30.0);
+INSERT INTO trabalha
+VALUES (3,10,10.0);
+INSERT INTO trabalha
+VALUES (7,10,35.0);
+INSERT INTO trabalha
+VALUES (7,30,5.0);
+INSERT INTO trabalha
+VALUES (4,20,15.0);
+INSERT INTO trabalha
+VALUES (8,20,NULL);
 
+ALTER TABLE funcionario
+ADD CONSTRAINT fk_func_depto FOREIGN KEY (id_depto) REFERENCES departamento (id_depto);
 
-insert into agencia(numero_agencia,endereco,cod_banco) values ('0562','Rua Joaquim Teixeira Alves, 1555','4');
-insert into agencia(numero_agencia,endereco,cod_banco) values ('3153','Av. Marcelino Pires, 1960','1');
+ALTER TABLE funcionario
+ADD CONSTRAINT fk_func_superv FOREIGN KEY (id_superv) REFERENCES funcionario (id_func);
 
+ALTER TABLE departamento
+ADD CONSTRAINT fk_depto_func FOREIGN KEY (id_gerente) REFERENCES funcionario (id_func);
 
+ALTER TABLE projeto
+ADD CONSTRAINT fk_proj_depto FOREIGN KEY (id_depto) REFERENCES departamento (id_depto);
 
-insert into cliente(cpf,nome,sexo,endereco) values ('111.222.333-44','Jennifer B Souza','F','Rua Cuiabá, 1050');
-insert into cliente(cpf,nome,sexo,endereco) values ('666.777.888-99','Caetano K Lima','M','Rua Ivinhema, 879');
-insert into cliente(cpf,nome,sexo,endereco) values ('555.444.777-33','Silvia Macedo','F','Rua Estados Unidos, 735');
+ALTER TABLE dependente
+ADD CONSTRAINT fk_dep_func FOREIGN KEY (id_func) REFERENCES funcionario (id_func) ON DELETE CASCADE;
 
+ALTER TABLE trabalha
+ADD CONSTRAINT fk_trab_func FOREIGN KEY (id_func) REFERENCES funcionario (id_func) ON DELETE CASCADE;
 
+ALTER TABLE trabalha
+ADD CONSTRAINT fk_trab_proj FOREIGN KEY (id_proj) REFERENCES projeto (id_proj) ON DELETE CASCADE;
 
-insert into conta(num_conta, saldo, tipo_conta, num_agencia) values ('86340-2', 763.05, 2 , 3153);
-insert into conta(num_conta, saldo, tipo_conta, num_agencia) values ('23584-7', 3879.12, 1 , 0562);
-
-
-
-insert into historico(cpf, num_conta, data_inicio) values ('111.222.333-44','23584-7','1997-12-17');
-insert into historico(cpf, num_conta, data_inicio) values ('666.777.888-99','23584-7','1997-12-17');
-insert into historico(cpf, num_conta, data_inicio) values ('555.444.777-33','86340-2','2010-11-29');
-
-
-
-insert into telefone_cliente(cpf_cliente,telefone) values('111.222.333-44','(67)3422-7788');
-insert into telefone_cliente(cpf_cliente,telefone) values('666.777.888-99','(67)3423-9900');
-insert into telefone_cliente(cpf_cliente,telefone) values('666.777.888-99','(67)8121-8833');
-
+/*1 Dado uma taxa e um identificador do funcionário, crie um procedure que aplique a taxa
+informada no salário do funcionário*/
 
 DELIMITER //
-create procedure taxaSalario(in taxa double)
+create procedure taxaSalario(taxa double, codigo_func int)
 begin
-	set
+	update funcionario set salario = salario*taxa where id_func = codigo_func;
 end//
 DELIMITER ;
+call taxaSalario(5,1);
 
 
 
+/*2 Crie uma tabela chamada hora_extra. Essa tabela deverá ter o identificador do funcionário e
+campo para guardar quantas horas foram excedidas de um funcionário na jornada semanal.
+Crie uma trigger que, ao ser adicionado um registro na tabela “trabalha” no banco, ela chamará
+uma procedure que calcula a soma do número de horas trabalhadas em todos os projetos de um
+funcionário. Caso a carga horária seja maior que 40, a trigger insere o valor excedente na tabela
+de hora_extra. */
 
+create table hora_extra(
+	identificador integer not null,
+    horas_execidadas float,
+    foreign key (identificador) references funcionario(id_func)
+);
+
+drop table hora_extra;
+
+DELIMITER //
+create trigger calculo_horas
+after insert on trabalha
+	for each row
+	begin
+		declare total_horas int default 0;
+end//
+DELIMITER;
+
+
+DELIMITER//
+	create procedure calculo_horas_extras(in id_func int, out total_horas int)
+    begin
+    select sum(num_hora) from trabalha;
+    
+end//
+DELIMITER;
