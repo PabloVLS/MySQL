@@ -216,8 +216,8 @@ GRANT ALL PRIVILEGES ON bd_empresa.* TO 'my_admin'@'localhost';
 GRANT SELECT, INSERT, DELETE, UPDATE ON bd_empresa.* TO 'my_user1'@'localhost';
 
 /*Visualize as permissões dadas aos usuários.*/
-SHOW GRANTS FOR my_admin;
-SHOW GRANTS FOR my_user1;
+SHOW GRANTS FOR 'my_admin'@'localhost';
+SHOW GRANTS FOR 'my_user1'@'localhost';
 
 /*Retire todas as permissões do usuário my_user.*/
 REVOKE ALL PRIVILEGES ON bd_empresa.* FROM 'my_user1'@'localhost';/*ta falando que ta com erro mas ta certo*/
@@ -244,7 +244,8 @@ GRANT SELECT, INSERT, DELETE, UPDATE ON bd_empresa.* TO papelDev;
 /*Crie dois usuários e atribuía a cada um, um dos papéis criados. Faça teste com os dois usuários
 criados.*/
 
-GRANT papelDev TO 'my_admin'@'localhost';
+GRANT papelAdmin TO 'my_admin'@'localhost';
+set default role papelAdmin to 'my_admin'@'localhost';
 SHOW GRANTS FOR 'my_admin'@'localhost';
 
 CREATE USER 'tst'@'localhost' IDENTIFIED BY 'senha1';
