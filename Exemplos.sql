@@ -69,88 +69,124 @@ GROUP BY categoria;
 
 
 
-Pergunta 1: Como criar um trigger que atualiza o estoque em uma tabela estoque ao inserir um pedido em uma tabela pedidos?
+Pergunta 1: Temos uma tabela de produtos e outra de estoque. Existe uma view chamada estoque_baixo que lista produtos com quantidade menor que 10 no estoque.
+Criamos um trigger para verificar o estoque após cada inserção na tabela de pedidos. Se o estoque do produto cair abaixo de 10, registra-se na tabela alertas.
+CREATE VIEW estoque_baixo AS
+SELECT p.id AS produto_id, p.nome, e.quantidade
+FROM produtos p
+JOIN estoque e ON p.id = e.produto_id
+WHERE e.quantidade < 10;
+
+
 CREATE TRIGGER after_inserir_pedido
 AFTER INSERT ON pedidos
 FOR EACH ROW
 BEGIN
-    UPDATE estoque e
-    JOIN produtos p ON e.produto_id = p.id
-    SET e.quantidade = e.quantidade - NEW.quantidade
-    WHERE p.id = NEW.produto_id;
+    -- Atualizar o estoque
+    UPDATE estoque
+    SET quantidade = quantidade - NEW.quantidade
+    WHERE produto_id = NEW.produto_id;
 
-    -- Validações para evitar estoque negativo
-    IF (SELECT quantidade FROM estoque WHERE produto_id = NEW.produto_id) < 0 THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Estoque insuficiente para este produto.';
+    -- Verificar a view 'estoque_baixo' e registrar alerta
+    IF (SELECT COUNT(*) FROM estoque_baixo WHERE produto_id = NEW.produto_id) > 0 THEN
+        INSERT INTO alertas (produto_id, mensagem, data_hora)
+        VALUES (NEW.produto_id, 'Estoque abaixo de 10 unidades.', NOW());
     END IF;
 END;
 
 
-Pergunta 2: Como criar um trigger que registra alterações de preço em uma tabela de histórico (historico_precos) e utiliza dados de uma view produtos_caros para verificar se o preço continua acima de um certo limite?
-CREATE TRIGGER after_update_preco
-AFTER UPDATE ON produtos
+
+Há uma tabela vendas e uma tabela lucros. Existe uma view chamada lucro_diario que mostra o lucro total por dia.
+    Criamos um trigger que, ao inserir uma nova venda, verifica a view e atualiza a tabela de lucros com base nela.CREATE TRIGGER after_update_preco
+CREATE VIEW lucro_diario AS
+SELECT data_venda, SUM(valor_venda - custo) AS lucro
+FROM vendas
+GROUP BY data_venda;
+
+CREATE TRIGGER after_inserir_venda
+AFTER INSERT ON vendas
 FOR EACH ROW
 BEGIN
-    -- Registrar no histórico
-    INSERT INTO historico_precos (produto_id, preco_antigo, preco_novo, data_alteracao)
-    VALUES (OLD.id, OLD.preco, NEW.preco, NOW());
+    -- Consultar lucro diário da nova data inserida
+    DECLARE lucro_total DECIMAL(10, 2);
+    SELECT lucro INTO lucro_total FROM lucro_diario WHERE data_venda = NEW.data_venda;
 
-    -- Validações com base na view
-    IF (SELECT COUNT(*) FROM produtos_caros WHERE id = NEW.id) = 0 AND NEW.preco > 100.00 THEN
-        INSERT INTO log_alertas (produto_id, mensagem, data_hora)
-        VALUES (NEW.id, 'Produto voltou a ser caro.', NOW());
-    END IF;
+    -- Atualizar a tabela de lucros
+    INSERT INTO lucros (data, total_lucro) 
+    VALUES (NEW.data_venda, lucro_total)
+    ON DUPLICATE KEY UPDATE total_lucro = lucro_total;
 END;
 
 
-Pergunta 3: Como criar um trigger que sincroniza informações entre duas tabelas, garantindo que exclusões ou alterações em produtos reflitam na tabela produtos_arquivados?
-CREATE TRIGGER after_delete_produto
-AFTER DELETE ON produtos
-FOR EACH ROW
-BEGIN
-    -- Arquivar o produto deletado
-    INSERT INTO produtos_arquivados (produto_id, nome, preco, data_exclusao)
-    VALUES (OLD.id, OLD.nome, OLD.preco, NOW());
-END;
+Há uma tabela produtos e uma tabela auditoria. Existe uma view chamada produtos_caros, que exibe produtos com preços acima de R$ 500,00. 
+    O objetivo é registrar na tabela auditoria sempre que um produto caro for atualizado.CREATE TRIGGER after_delete_produto
+CREATE VIEW produtos_caros AS
+SELECT id, nome, preco FROM produtos WHERE preco > 500.00;
 
-CREATE TRIGGER after_update_produto
+CREATE TRIGGER after_update_produtos
 AFTER UPDATE ON produtos
 FOR EACH ROW
 BEGIN
-    -- Sincronizar produto arquivado com as novas informações
-    UPDATE produtos_arquivados
-    SET nome = NEW.nome, preco = NEW.preco
-    WHERE produto_id = NEW.id;
-END;
-
-
-Pergunta 4: Como criar um trigger que registra em uma tabela auditoria as alterações feitas por um usuário em produtos caros (baseado na view produtos_caros), usando informações de uma tabela usuarios?
-CREATE TRIGGER after_update_produto_audit
-AFTER UPDATE ON produtos
-FOR EACH ROW
-BEGIN
-    -- Verificar se o produto é caro
+    -- Verificar se o produto atualizado está na view 'produtos_caros'
     IF (SELECT COUNT(*) FROM produtos_caros WHERE id = NEW.id) > 0 THEN
-        INSERT INTO auditoria (usuario_id, produto_id, acao, data_hora)
-        SELECT u.id, NEW.id, 'Alterou produto caro', NOW()
-        FROM usuarios u
-        WHERE u.id = NEW.usuario_modificador; -- Supõe um campo 'usuario_modificador' na tabela produtos
+        INSERT INTO auditoria (produto_id, acao, data_hora)
+        VALUES (NEW.id, 'Atualização de produto caro', NOW());
     END IF;
 END;
+
+
+
+Existe uma tabela categorias e outra tabela produtos. A view total_produtos_por_categoria exibe o total de produtos por categoria.
+Criamos um trigger para atualizar automaticamente os totais na tabela de categorias sempre que um produto for adicionado.CREATE TRIGGER after_update_produto_audit
+CREATE VIEW total_produtos_por_categoria AS
+SELECT c.id AS categoria_id, c.nome AS categoria_nome, COUNT(p.id) AS total_produtos
+FROM categorias c
+LEFT JOIN produtos p ON c.id = p.categoria_id
+GROUP BY c.id, c.nome;
+
+CREATE TRIGGER after_inserir_produto
+AFTER INSERT ON produtos
+FOR EACH ROW
+BEGIN
+    -- Consultar o total de produtos atual na view
+    DECLARE total INT;
+    SELECT total_produtos INTO total 
+    FROM total_produtos_por_categoria 
+    WHERE categoria_id = NEW.categoria_id;
+
+    -- Atualizar a tabela de categorias
+    UPDATE categorias
+    SET total_produtos = total
+    WHERE id = NEW.categoria_id;
+END;
+
 
 Pergunta 5: Como criar um trigger que calcula automaticamente um desconto com base em tabelas relacionadas (categorias e promocoes) e atualiza os preços na tabela produtos?
+CREATE VIEW categorias_com_promocoes AS
+SELECT 
+    c.id AS categoria_id,
+    c.nome AS categoria_nome,
+    p.percentual AS desconto,
+    p.ativa AS promocao_ativa
+FROM 
+    categorias c
+LEFT JOIN 
+    promocoes p ON c.id = p.categoria_id
+WHERE 
+    p.ativa = 1;
+
+    
 CREATE TRIGGER before_update_preco_produto
 BEFORE UPDATE ON produtos
 FOR EACH ROW
 BEGIN
     DECLARE desconto DECIMAL(5,2);
 
-    -- Calcular desconto com base na categoria e promoção
-    SELECT p.percentual
+    -- Consultar desconto na view 'categorias_com_promocoes'
+    SELECT desconto 
     INTO desconto
-    FROM promocoes p
-    JOIN categorias c ON p.categoria_id = c.id
-    WHERE c.id = NEW.categoria_id AND p.ativa = 1;
+    FROM categorias_com_promocoes
+    WHERE categoria_id = NEW.categoria_id;
 
     -- Aplicar desconto ao preço novo, se houver
     IF desconto IS NOT NULL THEN
@@ -162,6 +198,7 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'O preço não pode ser negativo após aplicar desconto.';
     END IF;
 END;
+
 
 
 
